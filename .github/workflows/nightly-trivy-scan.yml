@@ -1,0 +1,25 @@
+name: Trivy Nightly Scan
+on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+
+jobs:
+  nightly-scan:
+    name: Trivy Scan nightly
+    strategy:
+      fail-fast: false
+      matrix:
+        # maintain the versions of harbor that need to be actively
+        # security scanned
+        versions: [dev, v2.6.2, v1.10.14]
+        # list of images that need to be scanned
+        images: [harbor-core, harbor-db, harbor-exporter, harbor-jobservice, harbor-log, harbor-portal, harbor-registryctl, prepare]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/goharbor/${{ matrix.images }}:${{ matrix.versions }}'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
